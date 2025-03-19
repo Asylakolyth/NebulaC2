@@ -1,5 +1,6 @@
 from colorama import Fore
 import requests
+import re
 
 def get_location(ip_addr):
     ip_address = ip_addr
@@ -34,9 +35,12 @@ def ip_to_loc(args, send, client, gray):
         ip = ''
         if len(args) == 3:
             ip = str(args[1])
-            ip_location = get_location(ip)
-            DATA_TEXT = f'{ip_location}'
-            send(client, f'{gray}' + DATA_TEXT)
+            if re.match(r'^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$', ip):
+                ip_location = get_location(ip)
+                DATA_TEXT = f'{ip_location}'
+                send(client, f'{gray}' + DATA_TEXT)
+            else:
+                send(client, Fore.RED + 'Invalid IP address format')
         else:
             send(client, Fore.LIGHTWHITE_EX + '!IP_TO_GEO [IP]')
     except:

